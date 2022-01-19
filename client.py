@@ -10,9 +10,8 @@ def main() :
     HOST_INFORMATION = (address, PORT)
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client :
         client.connect(HOST_INFORMATION)
-        send_msg(client, "test")
-        send_msg(client, "test2")
-        send_msg(client, "test3")
+        for msg in sys.argv :
+            send_msg(client, msg)
         
 
 def send_msg(client : socket.socket, message):
