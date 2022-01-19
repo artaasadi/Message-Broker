@@ -1,8 +1,9 @@
 import socket
-import string
+import sys
 
 PORT = 1373 # Port to listen on
 MESSAGE_LENGTH_SIZE = 64 # Server needs MESSAGE_LENGTH_SIZE to get message length to know how much to recieve
+ENCODING = 'ascii' # Ascii encoding for messages
 
 def main() :
     address = socket.gethostbyname(socket.gethostname()) # Get Address automatically
@@ -10,10 +11,17 @@ def main() :
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client :
         client.connect(HOST_INFORMATION)
         send_msg(client, "test")
+        send_msg(client, "test2")
+        send_msg(client, "test3")
         
 
-def send_msg(client : socket.socket, msg : string):
-    pass
+def send_msg(client : socket.socket, message):
+    msg = message.encode(ENCODING)
+    msg_length = str(len(msg)).encode(ENCODING)
+    msg_length += b' ' * (MESSAGE_LENGTH_SIZE - len(msg_length))
+
+    client.send(msg_length)
+    client.send(msg)
 
 if __name__ == '__main__' :
     main()
