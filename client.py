@@ -21,13 +21,13 @@ def quit(client : socket.socket) :
     send_msg(client, message)
 
 def publish(client : socket.socket, topic, body) :
-    message = "publish " + topic + " " + body
+    message = "publish " + topic
+    for b in body :
+        message += " " + b
     send_msg(client, message)
 
 def listener(client : socket.socket, a) :
-    print("here")
     while True :
-        print(2)
         received = client.recv(MESSAGE_LENGTH_SIZE).decode(ENCODING)
         if not received :
             break
@@ -49,8 +49,17 @@ def order_listener(client : socket.socket) :
     while True :
         order = input().split()
         if order[0] == "publish" :
-            publish(client, order[1], order[2])
+            if len(order) == 1 :
+                print("Please input topic and message body!!!")
+                continue
+            if len(order) == 2 :
+                print("Please input message body!!!")
+                continue
+            publish(client, order[1], order[2:])
         elif order[0] == "subscribe" :
+            if len(order) == 1 :
+                print("Please input topics!!!")
+                continue
             subscribe(client, order[1:])
         elif order[0] == "ping" :
             pass
@@ -72,6 +81,7 @@ def create_connection() :
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client :
             client.connect(HOST_INFORMATION)
             threading.Thread(target=listener, args=(client, 1)).start() # Resreve a thread for subscribing
+            print("[CONNECTION ESTABLISHED]")
             order_listener(client)
     except Exception as e :
         print(e)

@@ -6,6 +6,8 @@ PORT = 1373 # Port to listen on
 MESSAGE_LENGTH_SIZE = 64 # Need MESSAGE_LENGTH_SIZE to get message length to know how much to recieve
 ENCODING = 'ascii' # Ascii encoding for messages
 
+subscribers = {} # A global dictionary is needed
+
 def send_msg(server : socket.socket, message) :
     msg = message.encode(ENCODING)
     msg_length = str(len(msg)).encode(ENCODING)
