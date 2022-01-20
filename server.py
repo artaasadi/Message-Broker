@@ -1,11 +1,18 @@
 import socket
 import threading
-
+import time
 
 PORT = 1373 # Port to listen on
 MESSAGE_LENGTH_SIZE = 64 # Need MESSAGE_LENGTH_SIZE to get message length to know how much to recieve
 ENCODING = 'ascii' # Ascii encoding for messages
 
+def send_msg(server : socket.socket, message) :
+    msg = message.encode(ENCODING)
+    msg_length = str(len(msg)).encode(ENCODING)
+    msg_length += b' ' * (MESSAGE_LENGTH_SIZE - len(msg_length))
+
+    server.send(msg_length)
+    server.send(msg)
 
 def main() :
     address = socket.gethostbyname(socket.gethostname()) # Get Address automatically
@@ -25,20 +32,27 @@ def start_server(server : socket.socket) :
 def connection_handler(conn : socket.socket, address):
     with conn:
         print("[NEW CONNECTION] connected from {}".format(address))
+        last_ping = time.time()
         while True :
+            if (time.time() - last_ping) >= 10.0 :
+                last_ping = time.time()
+                print("10 seconds")
+            print(1)
             received = conn.recv(MESSAGE_LENGTH_SIZE).decode(ENCODING)
+            print(2)
             if not received :
-                break
+                pass
             msg_length = int(received)
             msg = conn.recv(msg_length).decode(ENCODING)
             msg = msg.split()
-            if msg[0] == "subscribe":
-                send_ping(conn)
+            if msg[0] == "subscribe" :
+                send_msg(conn, "1")
+            elif msg[0] == "quit" :
+                send_msg(conn, "closed")
+                break
             print("[MESSAGE RECEIVED] {}".format(msg))
-    print("[CONNECTION DISCONNECTED] {}".format(address))
+    print("[CONNECTION CLOSED] {}".format(address))
 
-def send_ping(conn : socket.socket) :
-    conn.send(b'1')
 
 
 if __name__ == '__main__' :
