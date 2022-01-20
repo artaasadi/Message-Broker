@@ -6,6 +6,7 @@ PORT = 1373 # Port to listen on
 MESSAGE_LENGTH_SIZE = 64 # Need MESSAGE_LENGTH_SIZE to get message length to know how much to recieve
 ENCODING = 'ascii' # Ascii encoding for messages
 
+
 def main() :
     address = socket.gethostbyname(socket.gethostname()) # Get Address automatically
     HOST_INFORMATION = (address, PORT)
@@ -30,8 +31,14 @@ def connection_handler(conn : socket.socket, address):
                 break
             msg_length = int(received)
             msg = conn.recv(msg_length).decode(ENCODING)
+            msg = msg.split()
+            if msg[0] == "subscribe":
+                send_ping(conn)
             print("[MESSAGE RECEIVED] {}".format(msg))
     print("[CONNECTION DISCONNECTED] {}".format(address))
+
+def send_ping(conn : socket.socket) :
+    conn.send(b'1')
 
 
 if __name__ == '__main__' :
