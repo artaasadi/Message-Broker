@@ -1,4 +1,5 @@
 import socket
+from sys import argv
 import threading
 import time
 
@@ -35,27 +36,31 @@ def connection_handler(conn : socket.socket, address):
     with conn:
         print("[NEW CONNECTION] connected from {}".format(address))
         last_ping = time.time()
+        close_connection = []
+        t = threading.Thread(target=client_listener, args=(conn, ))
+        t.start()
         while True :
             if (time.time() - last_ping) >= 10.0 :
                 last_ping = time.time()
                 print("10 seconds")
-            print(1)
-            received = conn.recv(MESSAGE_LENGTH_SIZE).decode(ENCODING)
-            print(2)
-            if not received :
-                pass
-            msg_length = int(received)
-            msg = conn.recv(msg_length).decode(ENCODING)
-            msg = msg.split()
-            if msg[0] == "subscribe" :
-                send_msg(conn, "1")
-            elif msg[0] == "quit" :
-                send_msg(conn, "closed")
-                break
-            print("[MESSAGE RECEIVED] {}".format(msg))
+            #if list.count(close_connection) > 0 : 
+            #    break
+            
     print("[CONNECTION CLOSED] {}".format(address))
 
-
+def client_listener(conn : socket.socket) :
+    while True :
+        received = conn.recv(MESSAGE_LENGTH_SIZE).decode(ENCODING)
+        msg_length = int(received)
+        msg = conn.recv(msg_length).decode(ENCODING)
+        msg = msg.split()
+        if msg[0] == "subscribe" :
+            send_msg(conn, "1")
+        elif msg[0] == "quit" :
+            send_msg(conn, "closed")
+            #close_connection.append(1)
+            break
+        print("[MESSAGE RECEIVED] {}".format(msg))
 
 if __name__ == '__main__' :
     main()

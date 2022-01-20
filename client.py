@@ -26,7 +26,7 @@ def publish(client : socket.socket, topic, body) :
         message += " " + b
     send_msg(client, message)
 
-def listener(client : socket.socket, a) :
+def listener(client : socket.socket) :
     while True :
         received = client.recv(MESSAGE_LENGTH_SIZE).decode(ENCODING)
         if not received :
@@ -35,6 +35,7 @@ def listener(client : socket.socket, a) :
         msg = client.recv(msg_length).decode(ENCODING)
         if msg == "closed" :
             print("[CONNECTION CLOSED]")
+            client.close()
             create_connection()
         print("[MESSAGE RECEIVED] {}".format(msg))
 
@@ -101,7 +102,7 @@ def main() :
                 publish(client, sys.argv[4], sys.argv[5])
             elif sys.argv[3] == "subscribe" :
                 subscribe(client, sys.argv[4:])
-            threading.Thread(target=listener, args=(client, 1)).start() # Resreve a thread for subscribing
+            threading.Thread(target=listener, args=(client,)).start() # Resreve a thread for subscribing
             order_listener(client)
     except Exception as e:
         print(e)
