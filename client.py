@@ -28,8 +28,10 @@ def publish(client : socket.socket, topic, body) :
 
 def listener(client : socket.socket) :
     while True :
-        received = client.recv(MESSAGE_LENGTH_SIZE).decode(ENCODING)
-        if not received :
+        try :
+            received = client.recv(MESSAGE_LENGTH_SIZE).decode(ENCODING)
+        except :
+            print("connection interrupted")
             break
         msg_length = int(received)
         msg = client.recv(msg_length).decode(ENCODING)

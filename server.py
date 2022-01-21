@@ -30,14 +30,16 @@ def connection_handler(conn : socket.socket, address):
         print("[NEW CONNECTION] connected from {}".format(address))
         last_ping = time.time()
         close_connection = []
-        t = threading.Thread(target=client_listener, args=(conn, close_connection))
+        t = threading.Thread(target=client_listener, args=(conn, address, close_connection))
         t.start()
         while True :
             if (time.time() - last_ping) >= 10.0 :
                 last_ping = time.time()
-                print("10 seconds")
+                send_msg(conn, "Ping")
+                break
             if len(close_connection) > 0 : 
                 break
+        send_msg(conn, "closed")
             
     print("[CONNECTION CLOSED] {}".format(address))
 
@@ -65,9 +67,14 @@ def publish_msg(topic, msg) :
                 send_msg(conn, message)
             break
 
-def client_listener(conn : socket.socket, close_connection) :
+def client_listener(conn : socket.socket, address, close_connection) :
     while True :
-        received = conn.recv(MESSAGE_LENGTH_SIZE).decode(ENCODING)
+        print(time.time())
+        try :
+            received = conn.recv(MESSAGE_LENGTH_SIZE).decode(ENCODING)
+        except :
+            print("connection {} interrupted".format(address))
+            break
         msg_length = int(received)
         msg = conn.recv(msg_length).decode(ENCODING)
         print("[MESSAGE RECEIVED] {}".format(msg))
@@ -84,7 +91,6 @@ def client_listener(conn : socket.socket, close_connection) :
             except :
                 send_msg(conn, "your message publishing failed")
         elif msg[0] == "quit" :
-            send_msg(conn, "closed")
             close_connection.append(1)
             break
 
