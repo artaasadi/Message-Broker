@@ -51,7 +51,6 @@ def publish_msg(topic, msg) :
 
 def client_listener(conn : socket.socket, address, close_connection, ping_answer) :
     while True :
-        print(time.time())
         try :
             received = conn.recv(MESSAGE_LENGTH_SIZE).decode(ENCODING)
             msg_length = int(received)
@@ -72,6 +71,8 @@ def client_listener(conn : socket.socket, address, close_connection, ping_answer
                 send_msg(conn, "your message published successfully")
             except :
                 send_msg(conn, "your message publishing failed")
+        elif msg[0] == "Pong" :
+            del ping_answer[:]
         elif msg[0] == "quit" :
             close_connection.append(1)
             break
