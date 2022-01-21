@@ -42,8 +42,9 @@ def listener(client : socket.socket) :
         elif msg == "closed" :
             print("[CONNECTION CLOSED]")
             client.close()
-            create_connection()
+            break
         print("[MESSAGE RECEIVED] {}".format(msg))
+    create_connection()
 
 def subscribe(client : socket.socket, topics) :
     message = "subscribe"
@@ -56,6 +57,8 @@ def order_listener(client : socket.socket) :
     global answer_ping
     while True :
         order = input().split()
+        if len(order) == 0 :
+            continue
         if order[0] == "publish" :
             if len(order) == 1 :
                 print("Please input topic and message body!!!")
@@ -99,18 +102,22 @@ def create_connection() :
 def main() :
     address = socket.gethostbyname(socket.gethostname()) # Get Address automatically
     try:
-        if sys.argv[1] == "." and sys.argv[2] == "." :
-            HOST_INFORMATION = (address, PORT) # default setting
+        if len(sys.argv) == 1 :
+            create_connection()
         else :
-            HOST_INFORMATION = (sys.argv[1], int(sys.argv[2])) # manual setting
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client :
-            client.connect(HOST_INFORMATION)
-            if sys.argv[3] == "publish" :
-                publish(client, sys.argv[4], sys.argv[5])
-            elif sys.argv[3] == "subscribe" :
-                subscribe(client, sys.argv[4:])
-            threading.Thread(target=listener, args=(client, )).start() # Resreve a thread for subscribing
-            order_listener(client)
+            if sys.argv[1] == "." and sys.argv[2] == "." :
+                HOST_INFORMATION = (address, PORT) # default setting
+            else :
+                HOST_INFORMATION = (sys.argv[1], int(sys.argv[2])) # manual setting
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client :
+                client.connect(HOST_INFORMATION)
+                if len(sys.argv) > 3 :
+                    if sys.argv[3] == "publish" :
+                        publish(client, sys.argv[4], sys.argv[5])
+                    elif sys.argv[3] == "subscribe" :
+                        subscribe(client, sys.argv[4:])
+                threading.Thread(target=listener, args=(client, )).start() # Resreve a thread for subscribing
+                order_listener(client)
     except Exception as e:
         print(e)
         create_connection()
