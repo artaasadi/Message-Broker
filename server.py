@@ -1,3 +1,4 @@
+from audioop import add
 import socket
 from sys import argv
 import threading
@@ -24,26 +25,6 @@ def start_server(server : socket.socket) :
         conn, address = server.accept()
         threading.Thread(target= connection_handler, args= (conn, address)).start()
 
-
-def connection_handler(conn : socket.socket, address):
-    with conn:
-        print("[NEW CONNECTION] connected from {}".format(address))
-        last_ping = time.time()
-        close_connection = []
-        t = threading.Thread(target=client_listener, args=(conn, address, close_connection))
-        t.start()
-        while True :
-            if (time.time() - last_ping) >= 10.0 :
-                last_ping = time.time()
-                send_msg(conn, "Ping")
-                break
-            if len(close_connection) > 0 : 
-                break
-        send_msg(conn, "closed")
-            
-    print("[CONNECTION CLOSED] {}".format(address))
-
-
 def add_subscriber(conn : socket.socket, topics) :
     for topic in topics :
         if topic in subscribers.keys() :
@@ -57,6 +38,7 @@ def add_subscriber(conn : socket.socket, topics) :
             msg += " " + topic
     send_msg(conn, msg)
 
+
 def publish_msg(topic, msg) :
     message = "[MESSAGE] [{}]".format(topic)
     for m in msg :
@@ -67,17 +49,17 @@ def publish_msg(topic, msg) :
                 send_msg(conn, message)
             break
 
-def client_listener(conn : socket.socket, address, close_connection) :
+def client_listener(conn : socket.socket, address, close_connection, ping_answer) :
     while True :
         print(time.time())
         try :
             received = conn.recv(MESSAGE_LENGTH_SIZE).decode(ENCODING)
+            msg_length = int(received)
+            msg = conn.recv(msg_length).decode(ENCODING)
         except :
             print("connection {} interrupted".format(address))
             break
-        msg_length = int(received)
-        msg = conn.recv(msg_length).decode(ENCODING)
-        print("[MESSAGE RECEIVED] {}".format(msg))
+        print("[MESSAGE RECEIVED] [{}] {}".format(address, msg))
         msg = msg.split()
         if msg[0] == "subscribe" :
             try :
@@ -93,6 +75,33 @@ def client_listener(conn : socket.socket, address, close_connection) :
         elif msg[0] == "quit" :
             close_connection.append(1)
             break
+
+
+def connection_handler(conn : socket.socket, address):
+    with conn:
+        print("[NEW CONNECTION] {}".format(address))
+        last_ping = time.time()
+        close_connection = []
+        pings = []
+        t = threading.Thread(target=client_listener, args=(conn, address, close_connection, pings))
+        t.start()
+        while True :
+            if (time.time() - last_ping) >= 10.0 :
+                if len(pings) != 0 :
+                    print("[PING NOT ANSWERED] {} time(s): {}".format(len(pings), address))
+                if len(pings) == 3 :
+                    break
+                last_ping = time.time()
+                send_msg(conn, "Ping")
+                pings.append(1)
+            if len(close_connection) > 0 : 
+                break
+        for subscriber in subscribers.keys() :
+            if conn in subscribers[subscriber] :
+                subscribers[subscriber].remove(conn)
+        send_msg(conn, "closed")
+            
+    print("[CONNECTION CLOSED] {}".format(address))
 
 
 def main() :

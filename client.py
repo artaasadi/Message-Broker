@@ -7,6 +7,7 @@ PORT = 1373 # Port to listen on
 MESSAGE_LENGTH_SIZE = 64 # Server needs MESSAGE_LENGTH_SIZE to get message length to know how much to recieve
 ENCODING = 'ascii' # Ascii encoding for messages
 
+answer_ping = True
 
 def send_msg(client : socket.socket, message) :
     msg = message.encode(ENCODING)
@@ -27,15 +28,18 @@ def publish(client : socket.socket, topic, body) :
     send_msg(client, message)
 
 def listener(client : socket.socket) :
+    global answer_ping
     while True :
         try :
             received = client.recv(MESSAGE_LENGTH_SIZE).decode(ENCODING)
+            msg_length = int(received)
+            msg = client.recv(msg_length).decode(ENCODING)
         except :
             print("connection interrupted")
             break
-        msg_length = int(received)
-        msg = client.recv(msg_length).decode(ENCODING)
-        if msg == "closed" :
+        if msg == "Ping" and answer_ping:
+            send_msg(client, "Pong")
+        elif msg == "closed" :
             print("[CONNECTION CLOSED]")
             client.close()
             create_connection()
@@ -49,6 +53,7 @@ def subscribe(client : socket.socket, topics) :
     
 
 def order_listener(client : socket.socket) :
+    global answer_ping
     while True :
         order = input().split()
         if order[0] == "publish" :
@@ -64,10 +69,10 @@ def order_listener(client : socket.socket) :
                 print("Please input topics!!!")
                 continue
             subscribe(client, order[1:])
-        elif order[0] == "ping" :
-            pass
-        elif order[0] == "pong" :
-            pass
+        elif order[0] == "dont answer ping" :
+            answer_ping = False
+        elif order[0] == "answer ping" :
+            answer_ping = True
         elif order[0] == "quit" :
             quit(client)
 
