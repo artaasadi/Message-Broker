@@ -81,7 +81,7 @@ def create_connection() :
             HOST_INFORMATION = (address, int(input_port))
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client :
             client.connect(HOST_INFORMATION)
-            threading.Thread(target=listener, args=(client, 1)).start() # Resreve a thread for subscribing
+            threading.Thread(target=listener, args=(client, )).start() # Resreve a thread for subscribing
             print("[CONNECTION ESTABLISHED]")
             order_listener(client)
     except Exception as e :
@@ -102,7 +102,7 @@ def main() :
                 publish(client, sys.argv[4], sys.argv[5])
             elif sys.argv[3] == "subscribe" :
                 subscribe(client, sys.argv[4:])
-            threading.Thread(target=listener, args=(client,)).start() # Resreve a thread for subscribing
+            threading.Thread(target=listener, args=(client, )).start() # Resreve a thread for subscribing
             order_listener(client)
     except Exception as e:
         print(e)
