@@ -1,4 +1,3 @@
-from audioop import add
 import socket
 from sys import argv
 import threading
@@ -18,12 +17,6 @@ def send_msg(server : socket.socket, message) :
     server.send(msg_length)
     server.send(msg)
 
-
-def start_server(server : socket.socket) :
-    server.listen()
-    while True :
-        conn, address = server.accept()
-        threading.Thread(target= connection_handler, args= (conn, address)).start()
 
 def add_subscriber(conn : socket.socket, topics) :
     for topic in topics :
@@ -63,6 +56,7 @@ def client_listener(conn : socket.socket, address, close_connection, ping_answer
         if msg[0] == "subscribe" :
             try :
                 add_subscriber(conn, msg[1:])
+                send_msg(conn, "you subscribed successfully".format(msg[1:]))
             except :
                 send_msg(conn, "subscribing failed")
         elif msg[0] == "publish" :
@@ -103,6 +97,12 @@ def connection_handler(conn : socket.socket, address):
         send_msg(conn, "closed")
             
     print("[CONNECTION CLOSED] {}".format(address))
+
+def start_server(server : socket.socket) :
+    server.listen()
+    while True :
+        conn, address = server.accept()
+        threading.Thread(target= connection_handler, args= (conn, address)).start()
 
 
 def main() :

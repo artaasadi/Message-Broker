@@ -27,6 +27,13 @@ def publish(client : socket.socket, topic, body) :
         message += " " + b
     send_msg(client, message)
 
+def subscribe(client : socket.socket, topics) :
+    message = "subscribe"
+    for topic in topics :
+        message += " " + topic
+    send_msg(client, message)
+
+
 def listener(client : socket.socket) :
     global answer_ping
     while True :
@@ -45,12 +52,6 @@ def listener(client : socket.socket) :
             break
         print("[MESSAGE RECEIVED] {}".format(msg))
     create_connection()
-
-def subscribe(client : socket.socket, topics) :
-    message = "subscribe"
-    for topic in topics :
-        message += " " + topic
-    send_msg(client, message)
     
 
 def order_listener(client : socket.socket) :
@@ -107,6 +108,10 @@ def main() :
         else :
             if sys.argv[1] == "." and sys.argv[2] == "." :
                 HOST_INFORMATION = (address, PORT) # default setting
+            elif sys.argv[1] == "." :
+                HOST_INFORMATION = (address, int(sys.argv[2]))
+            elif sys.argv[2] == "." :
+                HOST_INFORMATION = (sys.argv[1], PORT) 
             else :
                 HOST_INFORMATION = (sys.argv[1], int(sys.argv[2])) # manual setting
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client :
